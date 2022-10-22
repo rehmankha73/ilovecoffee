@@ -1,18 +1,23 @@
-import { HttpException, HttpStatus, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { Coffee } from "./entities/coffee.entity";
-import { InjectModel } from "@nestjs/mongoose";
-import { Model } from 'mongoose';
+import { Event } from "../events/entities/event.entity";
+import { InjectConnection, InjectModel } from "@nestjs/mongoose";
+import { Connection, Model } from "mongoose";
 import { CreateCoffeesDto } from "./dto/create-coffees.dto";
 import { UpdateCoffeesDto } from "./dto/update-coffees.dto";
-import { throws } from "assert";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
 
 @Injectable()
 export class CoffeesService {
 
   constructor(
-    @InjectModel(Coffee.name) private readonly coffeeModel: Model<Coffee>
-  ) {}
+    @InjectModel(Coffee.name) private readonly coffeeModel: Model<Coffee>,
+    @InjectModel(Event.name) private readonly eventModel: Model<Event>,
+    @InjectConnection() private readonly connection: Connection,
+    @Inject('COFFEES_BRANDS') coffees_brands: string[]
+  ) {
+    console.log(coffees_brands)
+  }
 
   // private coffees: Coffee[] = [{
   //   id: 1,
@@ -27,7 +32,7 @@ export class CoffeesService {
   }
 
   async findOne(id: string) {
-    let coffee = await this.coffeeModel.find({_id: id}).exec();
+    let coffee = await this.coffeeModel.find({ _id: id }).exec();
     if (!coffee) {
       // throw new HttpException(`No Coffee with the #${id} Found!`, HttpStatus.GONE);
       throw new NotFoundException(`Coffee with the id #${id} not Found!`);
@@ -41,15 +46,41 @@ export class CoffeesService {
   }
 
   async update(id: string, UpdateCoffeeDto: UpdateCoffeesDto) {
-    let existingCoffee = await this.coffeeModel.findOneAndUpdate({_id: id}, {$set: UpdateCoffeeDto}, {new: true}).exec();
+    let existingCoffee = await this.coffeeModel.findOneAndUpdate({ _id: id }, { $set: UpdateCoffeeDto }, { new: true }).exec();
     if (!existingCoffee) {
-        throw new NotFoundException(`Coffee with id #${id} not Found`);
+      throw new NotFoundException(`Coffee with id #${id} not Found`);
     }
-    return existingCoffee
+    return existingCoffee;
   }
 
   async remove(id: string) {
-    let coffee = await this.coffeeModel.findOne({_id: id}).exec();
+    let coffee = await this.coffeeModel.findOne({ _id: id }).exec();
     return coffee.remove();
+  }
+
+  async recommendCoffee(coffee: Coffee) {
+    console.log(coffee, "test");
+    const session = await this.connection.startSession();
+    session.startTransaction();
+
+    try {
+      coffee.recommandations++;
+      const recommendEvent = new this.eventModel({
+        name: "recommend_coffee",
+        type: "coffee",
+        payload: {
+          coffeeId: coffee.id
+        }
+      });
+
+      await recommendEvent.save({ session });
+      await coffee.save();
+
+      await session.commitTransaction();
+    } catch (err) {
+      await session.abortTransaction();
+    } finally {
+      await session.endSession();
+    }
   }
 }

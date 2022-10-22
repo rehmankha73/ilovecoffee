@@ -64,4 +64,12 @@ export class CoffeesController {
 
     return this.coffeeService.remove(id);
   }
+
+  // 'coffees/recommend'
+  @Post('/recommend')
+  createCoffeeWithRecommendation(@Body() coffee: Coffee) {
+    console.log('here')
+    console.log(coffee, 'coffee')
+    return this.coffeeService.recommendCoffee(coffee);
+  }
 }
