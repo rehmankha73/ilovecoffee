@@ -8,7 +8,7 @@ import { CoffeeRatingModule } from './coffee-rating/coffee-rating.module';
 @Module({
   imports: [CoffeesModule,
     MongooseModule.forRoot("mongodb://localhost:27017/nest-course"),
-    CoffeeRatingModule
+    CoffeeRatingModule,
   ],
   controllers: [AppController],
   providers: [AppService]

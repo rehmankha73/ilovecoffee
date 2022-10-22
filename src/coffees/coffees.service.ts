@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException, Scope } from "@nestjs/common";
 import { Coffee } from "./entities/coffee.entity";
 import { Event } from "../events/entities/event.entity";
 import { InjectConnection, InjectModel } from "@nestjs/mongoose";
@@ -7,7 +7,7 @@ import { CreateCoffeesDto } from "./dto/create-coffees.dto";
 import { UpdateCoffeesDto } from "./dto/update-coffees.dto";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
 
-@Injectable()
+@Injectable({scope: Scope.REQUEST})
 export class CoffeesService {
 
   constructor(
@@ -17,6 +17,7 @@ export class CoffeesService {
     @Inject('COFFEES_BRANDS') coffees_brands: string[]
   ) {
     console.log(coffees_brands)
+    console.log('database Connection initiated!')
   }
 
   // private coffees: Coffee[] = [{
@@ -64,7 +65,7 @@ export class CoffeesService {
     session.startTransaction();
 
     try {
-      coffee.recommandations++;
+      coffee.recommendations++;
       const recommendEvent = new this.eventModel({
         name: "recommend_coffee",
         type: "coffee",

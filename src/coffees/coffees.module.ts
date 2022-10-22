@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, Scope } from "@nestjs/common";
 import { CoffeesController } from "./coffees.controller";
 import { CoffeesService } from "./coffees.service";
 import { Coffee, CoffeeSchema } from "./entities/coffee.entity";
@@ -35,13 +35,15 @@ class ProductionConfigService {
   // providers: [{provide: CoffeesService, useValue: new MockCoffeeService()}],
   providers: [
     CoffeesService,
-    {
-      provide: ConfigService,
-      useClass: process.env.NODE_ENV === "development"
-        ? DevelopmentConfigService
-        : ProductionConfigService
-    },
-    { provide: COFFEES_BRANDS, useValue: ["Gloria Jeans", "La Cafe"] }
+    // {
+    //   provide: ConfigService,
+    //   useClass: process.env.NODE_ENV === "development"
+    //     ? DevelopmentConfigService
+    //     : ProductionConfigService
+    // },
+    // { provide: COFFEES_BRANDS, useValue: ["Gloria Jeans", "La Cafe"] }
+    { provide: COFFEES_BRANDS, useFactory: () => ["Gloria Jeans", "La Cafe"],
+    scope: Scope.REQUEST}
   ],
   exports: [CoffeesService]
 })
