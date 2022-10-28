@@ -16,12 +16,14 @@ import { Coffee } from "./entities/coffee.entity";
 import { CreateCoffeesDto } from "./dto/create-coffees.dto";
 import { UpdateCoffeesDto } from "./dto/update-coffees.dto";
 import { PaginationQueryDto } from "../common/dto/pagination-query.dto";
+import { ApiForbiddenResponse, ApiResponse } from "@nestjs/swagger";
 
 @Controller('coffees')
 export class CoffeesController {
 
   constructor(private readonly coffeeService: CoffeesService) {}
 
+  @ApiForbiddenResponse({ description: 'Something went wrong! Forbidden' })
   @Get() findAll(@Query() paginationQuery: PaginationQueryDto) {
     // const { limit, offset } = paginationQuery;
     // response.status(200).send('This action should return all records!');
